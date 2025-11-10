@@ -1,0 +1,34 @@
+plugins {
+    id("war")
+}
+
+repositories {
+    mavenCentral()
+}
+
+group = "com.kremnev"
+version = "1.0.0"
+
+dependencies {
+    // Use JUnit Jupiter for testing.
+    testImplementation(libs.junit.jupiter)
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("org.springframework:spring-webmvc:6.2.10")
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.named<Test>("test") {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
+
+tasks.jar {
+    enabled = false
+}
