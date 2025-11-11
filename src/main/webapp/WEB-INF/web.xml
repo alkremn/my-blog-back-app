@@ -14,7 +14,7 @@
         </init-param>
         <init-param>
             <param-name>contextConfigLocation</param-name>
-            <param-value>com.kremnev.blog.config.WebConfiguration</param-value>
+            <param-value>com.kremnev.blog.configuration.WebConfiguration</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

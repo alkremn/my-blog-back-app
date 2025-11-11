@@ -14,7 +14,12 @@ dependencies {
     testImplementation(libs.junit.jupiter)
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     implementation("org.springframework:spring-webmvc:6.2.10")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
+
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
 }
 

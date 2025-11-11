@@ -1,4 +1,4 @@
-package com.kremnev.blog.config;
+package com.kremnev.blog.configuration;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
