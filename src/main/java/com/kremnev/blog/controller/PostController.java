@@ -1,6 +1,6 @@
 package com.kremnev.blog.controller;
 
-import com.kremnev.blog.model.Post;
+import com.kremnev.blog.dto.PostDto;
 import com.kremnev.blog.service.PostService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +21,12 @@ public class PostController {
 
     @GetMapping
     @ResponseBody
-    public List<Post> getPosts() {
-        return this.postService.findAll();
+    public List<PostDto> getPosts() {
+        return postService.findAll();
+    }
+
+    @GetMapping(value = "/{id}")
+    public PostDto getPost(long id) {
+        return postService.findById(id);
     }
 }

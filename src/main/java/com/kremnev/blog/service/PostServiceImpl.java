@@ -1,6 +1,6 @@
 package com.kremnev.blog.service;
 
-import com.kremnev.blog.model.Post;
+import com.kremnev.blog.dto.PostDto;
 import com.kremnev.blog.repository.PostRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,26 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> findAll() {
-        return this.postRepository.findAll();
+    public List<PostDto> findAll() {
+        return postRepository.findAll().stream().map(post -> new PostDto(
+                post.getId(),
+                post.getTitle(),
+                post.getText(),
+                post.getTags(),
+                post.getLikesCount(),
+                post.getCommentsCount()))
+                .toList();
+    }
+
+    @Override
+    public PostDto findById(long id) {
+        var post = postRepository.findById(id);
+        return new PostDto(
+                post.getId(),
+                post.getTitle(),
+                post.getText(),
+                post.getTags(),
+                post.getLikesCount(),
+                post.getCommentsCount());
     }
 }
