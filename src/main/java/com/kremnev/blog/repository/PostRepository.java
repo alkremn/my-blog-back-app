@@ -3,8 +3,9 @@ package com.kremnev.blog.repository;
 import com.kremnev.blog.model.Post;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PostRepository {
     List<Post> findAll();
-    Post findById(long id);
+    Optional<Post> findById(long id);
 }

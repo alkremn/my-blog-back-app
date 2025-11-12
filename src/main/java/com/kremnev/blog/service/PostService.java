@@ -1,10 +1,11 @@
 package com.kremnev.blog.service;
 
 import com.kremnev.blog.dto.PostDto;
+import com.kremnev.blog.dto.PostsResponseDto;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface PostService {
-    List<PostDto> findAll();
-    PostDto findById(long id);
+    PostsResponseDto findAll(String search, int pageNumber, int pageSize);
+    Optional<PostDto> findById(long id);
 }

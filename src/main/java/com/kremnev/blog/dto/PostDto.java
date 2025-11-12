@@ -2,7 +2,7 @@ package com.kremnev.blog.dto;
 
 import java.util.List;
 
-public class PostDto {
+public final class PostDto {
     private final Long id;
     private final String title;
     private final String text;
