@@ -1,10 +1,12 @@
 package com.kremnev.blog.controller;
 
-import com.kremnev.blog.dto.PostDto;
-import com.kremnev.blog.dto.PostsResponseDto;
+import com.kremnev.blog.dto.*;
+import com.kremnev.blog.model.Post;
 import com.kremnev.blog.service.PostImageService;
 import com.kremnev.blog.service.PostService;
 import org.springframework.core.io.Resource;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,36 +37,63 @@ public class PostController {
                                      @RequestParam(defaultValue = "1") int pageNumber,
                                      @RequestParam(defaultValue = "25") int pageSize)
     {
-       return postService.findAll(search, pageNumber, pageSize);
+        List<Post> result = postService.getAll(search, pageNumber, pageSize);
+        List<PostDto> dtoList = result.stream().map(PostDto::from).toList();
+        return new PostsResponseDto(
+                dtoList,
+                true,
+                false,
+                3);
     }
 
-    @GetMapping(value = "{id}")
-    public ResponseEntity<PostDto> getPost(@PathVariable(name = "id") long id) {
-        var post = postService.findById(id);
-        return ResponseEntity.of(post);
+    @GetMapping("{id}")
+    public ResponseEntity<PostDto> getPost(@PathVariable long id) {
+        var postOpt = postService.getById(id);
+        return ResponseEntity.of(postOpt.map(PostDto::from));
     }
 
-    @PutMapping(value = "{postId}/image")
-    public ResponseEntity<?> updatePostImage(@PathVariable(name = "postId") long postId, @RequestParam("file") MultipartFile file) {
-        try {
-            postImageService.upsert(postId, file);
-            return ResponseEntity.ok().build();
-        } catch (IOException ex) {
-            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-                    .body(Map.of("message", ex.getMessage()));
-        }
-    }
-
-    @GetMapping(value = "{postId}/image")
-    public ResponseEntity<Resource> downloadPostImage(@PathVariable(name = "postId") long postId) {
-        try {
-            Optional<Resource> file = postImageService.get(postId);
-            return file.map(resource -> ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType("application/octet-stream"))
-                    .body(resource)).orElseGet(() -> ResponseEntity.notFound().build());
-
-        } catch (IOException ex) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
+//    @PostMapping
+//    public ResponseEntity<PostDto> createPost(@RequestBody CreatePostRequest request) {
+//        var created = postService.create();
+//        var location = URI.create("/api/posts/" + created.getId());
+//        return ResponseEntity
+//                .created(location)
+//                .body(created);
+//    }
+//
+//    @PutMapping
+//    public ResponseEntity<PostDto> updatePost(@RequestBody UpdatePostRequest request) {
+//        var created = postService.update(request);
+//        var location = URI.create("/api/posts/" + created.getId());
+//        return ResponseEntity
+//                .created(location)
+//                .body(created);
+//    }
+//
+//    @PutMapping("{postId}/image")
+//    public ResponseEntity<?> updatePostImage(@PathVariable long postId, @RequestParam("file") MultipartFile file) {
+//        System.out.println("Get request with id: " + postId);
+//        try {
+//            postImageService.upsert(postId, file);
+//            return ResponseEntity.ok().build();
+//        } catch (IOException ex) {
+//            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+//                    .body(Map.of("message", ex.getMessage()));
+//        }
+//    }
+//
+//    @GetMapping("{postId}/image")
+//    public ResponseEntity<Resource> downloadPostImage(@PathVariable long postId) {
+//        System.out.println("Get request with id: " + postId);
+//        try {
+//            Optional<Resource> file = postImageService.get(postId);
+//            return file.map(resource -> ResponseEntity.ok()
+//                    .contentType(MediaType.parseMediaType("application/octet-stream"))
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+//                    .body(resource)).orElseGet(() -> ResponseEntity.notFound().build());
+//
+//        } catch (IOException ex) {
+//            return ResponseEntity.internalServerError().build();
+//        }
+//    }
 }

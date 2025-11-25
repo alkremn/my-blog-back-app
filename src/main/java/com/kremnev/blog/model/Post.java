@@ -6,9 +6,8 @@ public final class Post {
     private final Long id;
     private final String title;
     private final String text;
-    private final List<String> tags;
+    private List<String> tags;
     private final int likesCount;
-    private final int commentsCount;
 
     public Post(Long id, String title, String text, List<String> tags, int likesCount, int commentsCount) {
         this.id = id;
@@ -16,7 +15,6 @@ public final class Post {
         this.text = text;
         this.tags = tags;
         this.likesCount = likesCount;
-        this.commentsCount = commentsCount;
     }
 
     public Long getId() {
@@ -35,12 +33,12 @@ public final class Post {
         return tags;
     }
 
-    public int getLikesCount() {
-        return likesCount;
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 
-    public int getCommentsCount() {
-        return commentsCount;
+    public int getLikesCount() {
+        return likesCount;
     }
 }
 

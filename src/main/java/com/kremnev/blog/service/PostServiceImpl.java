@@ -1,10 +1,11 @@
 package com.kremnev.blog.service;
 
-import com.kremnev.blog.dto.PostDto;
-import com.kremnev.blog.dto.PostsResponseDto;
+import com.kremnev.blog.model.Post;
 import com.kremnev.blog.repository.PostRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,32 +19,22 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostsResponseDto findAll(String search, int pageNumber, int pageSize) {
-        var posts = postRepository.findAll().stream().map(post -> new PostDto(
-                post.getId(),
-                post.getTitle(),
-                post.getText(),
-                post.getTags(),
-                post.getLikesCount(),
-                post.getCommentsCount()))
-                .toList();
-
-        return new PostsResponseDto(posts, false, false, 1);
+    public List<Post> getAll(String search, int pageNumber, int pageSize) {
+        return postRepository.findAll(search, pageNumber, pageSize);
     }
 
     @Override
-    public Optional<PostDto> findById(long id) {
-        var optionalPost = postRepository.findById(id);
-        if (optionalPost.isEmpty())
-            return Optional.empty();
+    public Optional<Post> getById(long id) {
+        return postRepository.findById(id);
+    }
 
-        var post = optionalPost.get();
-        return Optional.of(new PostDto(
-                post.getId(),
-                post.getTitle(),
-                post.getText(),
-                post.getTags(),
-                post.getLikesCount(),
-                post.getCommentsCount()));
+    @Override
+    public Post create(String title, String text, List<String> tags) {
+        return null;
+    }
+
+    @Override
+    public Post update(Long id, String title, String text, List<String> tags) {
+        return null;
     }
 }

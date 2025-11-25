@@ -1,5 +1,15 @@
 plugins {
-    id("war")
+    java
+    war
+}
+
+group = "com.kremnev"
+version = "1.0-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
 tasks.withType<JavaCompile> {
@@ -10,37 +20,35 @@ repositories {
     mavenCentral()
 }
 
-group = "com.kremnev"
-version = "1.0.0"
-
 dependencies {
-    // Use JUnit Jupiter for testing.
-    testImplementation(libs.junit.jupiter)
+    // Spring MVC (brings spring-context, spring-beans, etc. transitively)
+    implementation("org.springframework:spring-webmvc:6.2.14")
 
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    implementation("org.springframework:spring-webmvc:6.2.10")
+    // Jackson (Spring MVC will use these for @ResponseBody / JSON)
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-core:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
 
-    implementation("com.h2database:h2:2.2.224")
-    implementation("org.springframework.data:spring-data-jdbc:3.4.1")
+    // Spring JDBC for JdbcTemplate
+    implementation("org.springframework:spring-jdbc:6.2.14")
 
+    // PostgreSQL JDBC driver (used at runtime to talk to Docker Postgres)
+    runtimeOnly("org.postgresql:postgresql:42.7.3")
+
+    implementation("org.springframework.data:spring-data-commons:3.3.2")
+
+    // Provided by Tomcat / servlet container
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+
+    // JUnit Jupiter from your version catalog
+    testImplementation(libs.junit.jupiter)
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
+tasks.test {
     useJUnitPlatform()
 }
 
 tasks.jar {
+    // We only care about WAR (for Tomcat), disabling plain JAR.
     enabled = false
 }

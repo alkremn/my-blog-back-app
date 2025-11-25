@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
 @Service
@@ -23,8 +22,8 @@ public class PostImageServiceImpl implements PostImageService {
 
     @Override
     public void upsert(long postId, MultipartFile file) throws IOException {
-        Path dir = root.resolve("posts").resolve(Long.toString(postId));
-        Files.createDirectories(dir); // <-- needs write permission
+        Path dir = root.resolve(Long.toString(postId));
+        Files.createDirectories(dir);
 
         String ct = String.valueOf(file.getContentType()).toLowerCase();
         if (!ct.startsWith("image/")) throw new IOException("Only image/* allowed");
@@ -35,11 +34,8 @@ public class PostImageServiceImpl implements PostImageService {
                 .map(n -> n.substring(n.lastIndexOf('.')))
                 .orElse("");
 
-        Path tmp = Files.createTempFile(dir, "upload_", ".part");
-        file.transferTo(tmp);
-        Files.move(tmp, dir.resolve("image" + ext),
-                StandardCopyOption.REPLACE_EXISTING,
-                StandardCopyOption.ATOMIC_MOVE);
+        Path dest = dir.resolve("image" + ext);
+        file.transferTo(dest);
     }
 
     @Override

@@ -1,11 +1,14 @@
 package com.kremnev.blog.service;
 
-import com.kremnev.blog.dto.PostDto;
-import com.kremnev.blog.dto.PostsResponseDto;
+import com.kremnev.blog.model.Post;
+import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PostService {
-    PostsResponseDto findAll(String search, int pageNumber, int pageSize);
-    Optional<PostDto> findById(long id);
+    List<Post> getAll(String search, int pageNumber, int pageSize);
+    Optional<Post> getById(long id);
+    Post create(String title, String text, List<String> tags);
+    Post update(Long id, String title, String text, List<String> tags);
 }
