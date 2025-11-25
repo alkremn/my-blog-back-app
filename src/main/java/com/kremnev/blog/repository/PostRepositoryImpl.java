@@ -95,15 +95,22 @@ public class PostRepositoryImpl implements PostRepository {
         args.add(offset);
 
         List<Post> posts = jdbc.query(sql.toString(), args.toArray(), new PostRowMapper());
+        attachTags(posts);
         return posts;
     }
 
     @Override
     public Optional<Post> findById(long id) {
         try {
-            return Optional.ofNullable(jdbc.queryForObject(
+            var post = jdbc.queryForObject(
                     "SELECT id, title, text, likes_count FROM posts WHERE id = ?",
-                    new PostRowMapper(), id));
+                    new PostRowMapper(), id);
+            if (post == null)
+                return Optional.empty();
+
+            attachTags(post);
+            return Optional.of(post);
+
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
@@ -114,6 +121,12 @@ public class PostRepositoryImpl implements PostRepository {
         return null;
     }
 
+    private void attachTags(Post... posts) {
+        if (posts == null || posts.length == 0) return;
+
+        List<Post> list = Arrays.asList(posts);
+        attachTags(list);
+    }
 
     private void attachTags(List<Post> posts) {
         if (posts.isEmpty())
