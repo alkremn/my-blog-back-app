@@ -2,6 +2,7 @@ package com.kremnev.blog.repository;
 
 import com.kremnev.blog.model.Post;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.util.Pair;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -45,7 +46,7 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public List<Post> findAll(String search, int pageNumber, int pageSize) {
+    public Pair<List<Post>, Integer> findAll(String search, int pageNumber, int pageSize) {
         SearchCriteria sc = parseSearch(search);
 
         boolean filterByTags = !sc.tags.isEmpty();
@@ -53,7 +54,7 @@ public class PostRepositoryImpl implements PostRepository {
 
         StringBuilder sql = new StringBuilder(
             "SELECT p.id, p.title, p.text, p.likes_count, COUNT(c.id) as comments_count," +
-                    "p.created_at, p.updated_at FROM posts p " +
+                    "p.created_at, p.updated_at, count(*) over() as total_count FROM posts p " +
                     "LEFT JOIN comments c ON c.post_id = p.id "
         );
 
@@ -92,6 +93,7 @@ public class PostRepositoryImpl implements PostRepository {
 
         sql.append("ORDER BY p.created_at DESC ");
 
+        int totalCount = getTotalCount(whereParts, args);
         int offset = Math.max(pageNumber -  1, 0) * pageSize;
         sql.append("LIMIT ? OFFSET ?");
         args.add(pageSize);
@@ -99,7 +101,8 @@ public class PostRepositoryImpl implements PostRepository {
 
         List<Post> posts = jdbc.query(sql.toString(), args.toArray(), new PostRowMapper());
         attachTags(posts);
-        return posts;
+
+        return Pair.of(posts, totalCount);
     }
 
     @Override
@@ -165,6 +168,16 @@ public class PostRepositoryImpl implements PostRepository {
                 post.getTags().add(tagName);
             }
         });
+    }
+
+    private Integer getTotalCount(List<String> whereParts, List<Object> args) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM posts ");
+
+        if (!whereParts.isEmpty()) {
+            sql.append("WHERE ").append(String.join(" AND ", whereParts));
+        }
+
+        return jdbc.queryForObject(sql.toString(), args.toArray(), Integer.class);
     }
 
     private SearchCriteria parseSearch(String raw) {

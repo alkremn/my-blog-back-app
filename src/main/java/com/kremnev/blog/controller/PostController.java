@@ -2,6 +2,7 @@ package com.kremnev.blog.controller;
 
 import com.kremnev.blog.dto.*;
 import com.kremnev.blog.model.Post;
+import com.kremnev.blog.model.PostsResponse;
 import com.kremnev.blog.service.PostImageService;
 import com.kremnev.blog.service.PostService;
 import org.springframework.core.io.Resource;
@@ -37,13 +38,9 @@ public class PostController {
                                      @RequestParam(defaultValue = "1") int pageNumber,
                                      @RequestParam(defaultValue = "25") int pageSize)
     {
-        List<Post> result = postService.getAll(search, pageNumber, pageSize);
-        List<PostDto> dtoList = result.stream().map(PostDto::from).toList();
-        return new PostsResponseDto(
-                dtoList,
-                true,
-                false,
-                3);
+        PostsResponse result = postService.getAll(search, pageNumber, pageSize);
+        List<PostDto> dtoList = result.getPosts().stream().map(PostDto::from).toList();
+        return new PostsResponseDto(dtoList, result.getHasPrev(), result.getHasNext(), result.getLastPage());
     }
 
     @GetMapping("{id}")
