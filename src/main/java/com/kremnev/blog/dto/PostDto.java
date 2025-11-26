@@ -9,7 +9,8 @@ public record PostDto(
     String title,
     String text,
     List<String> tags,
-    int likesCount
+    int likesCount,
+    int commentsCount
 ) {
     public static PostDto from(Post post) {
         return new PostDto(
@@ -17,7 +18,8 @@ public record PostDto(
                 post.getTitle(),
                 post.getText(),
                 post.getTags(),
-                post.getLikesCount()
+                post.getLikesCount(),
+                post.getCommentsCount()
         );
     }
 }

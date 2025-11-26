@@ -39,7 +39,7 @@ public class PostRepositoryImpl implements PostRepository {
                     rs.getString("text"),
                     new ArrayList<String>(),
                     rs.getInt("likes_count"),
-                    0
+                    rs.getInt("comments_count")
             );
         }
     }
@@ -52,14 +52,16 @@ public class PostRepositoryImpl implements PostRepository {
         boolean filterByTitle = sc.titleQuery != null && !sc.titleQuery.isBlank();
 
         StringBuilder sql = new StringBuilder(
-            "SELECT p.id, p.title, p.text, p.likes_count, p.created_at, p.updated_at FROM posts p "
+            "SELECT p.id, p.title, p.text, p.likes_count, COUNT(c.id) as comments_count," +
+                    "p.created_at, p.updated_at FROM posts p " +
+                    "LEFT JOIN comments c ON c.post_id = p.id "
         );
 
         List<Object> args = new ArrayList<>();
 
         if (filterByTags) {
             sql.append("JOIN posts_tags pt ON pt.post_id = p.id ")
-                    .append("JOIN tags t ON t.id = pt.tag_id");
+                    .append("JOIN tags t ON t.id = pt.tag_id ");
         }
 
         List<String> whereParts = new ArrayList<>();
@@ -71,7 +73,7 @@ public class PostRepositoryImpl implements PostRepository {
 
         if (filterByTags) {
             String placeholders = String.join(", ", Collections.nCopies(sc.tags.size(), "?"));
-            whereParts.add("LOWER(t.name) IN (" + placeholders + ")");
+            whereParts.add("LOWER(t.name) IN (" + placeholders + ") ");
             args.addAll(sc.tags);
         }
 
@@ -81,9 +83,10 @@ public class PostRepositoryImpl implements PostRepository {
                     .append(" ");
         }
 
+        sql.append("GROUP BY p.id ");
+
         if (filterByTags) {
-            sql.append("GROUP BY p.id ")
-                    .append("HAVING COUNT(DISTINCT LOWER(t.name)) = ? ");
+            sql.append("HAVING COUNT(DISTINCT LOWER(t.name)) = ? ");
             args.add(sc.tags.size());
         }
 
@@ -103,7 +106,11 @@ public class PostRepositoryImpl implements PostRepository {
     public Optional<Post> findById(long id) {
         try {
             var post = jdbc.queryForObject(
-                    "SELECT id, title, text, likes_count FROM posts WHERE id = ?",
+                    "SELECT p.id, p.title, p.text, p.likes_count, COUNT(c.id) as comments_count, p.created_at, p.updated_at " +
+                            "FROM posts p " +
+                            "LEFT JOIN comments c ON c.post_id = p.id " +
+                            "WHERE p.id = ? " +
+                            "GROUP BY p.id ",
                     new PostRowMapper(), id);
             if (post == null)
                 return Optional.empty();
