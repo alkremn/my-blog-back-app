@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface PostRepository {
     Pair<List<Post>, Integer> findAll(String search, int pageNumber, int pageSize);
-    Optional<Post> findById(long id);
+    Optional<Post> findById(long postId);
     Post create(String title, String text, List<String> tags);
+    Optional<Post> update(Long postId, String title, String text, List<String> tags);
+    Optional<Post> addLike(Long postId);
 }

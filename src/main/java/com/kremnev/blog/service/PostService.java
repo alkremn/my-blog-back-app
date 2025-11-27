@@ -8,7 +8,8 @@ import java.util.Optional;
 
 public interface PostService {
     PostsResponse getAll(String search, int pageNumber, int pageSize);
-    Optional<Post> getById(long id);
+    Optional<Post> getById(long postId);
     Post create(String title, String text, List<String> tags);
-    Post update(Long id, String title, String text, List<String> tags);
+    Optional<Post> update(Long postId, String title, String text, List<String> tags);
+    Optional<Post> addLike(Long postId);
 }

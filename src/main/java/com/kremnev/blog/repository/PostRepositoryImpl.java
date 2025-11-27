@@ -6,6 +6,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -106,7 +107,7 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Optional<Post> findById(long id) {
+    public Optional<Post> findById(long postId) {
         try {
             var post = jdbc.queryForObject(
                     "SELECT p.id, p.title, p.text, p.likes_count, COUNT(c.id) as comments_count, p.created_at, p.updated_at " +
@@ -114,7 +115,7 @@ public class PostRepositoryImpl implements PostRepository {
                             "LEFT JOIN comments c ON c.post_id = p.id " +
                             "WHERE p.id = ? " +
                             "GROUP BY p.id ",
-                    new PostRowMapper(), id);
+                    new PostRowMapper(), postId);
             if (post == null)
                 return Optional.empty();
 
@@ -127,8 +128,86 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
+    @Transactional
     public Post create(String title, String text, List<String> tags) {
-        return null;
+        Long postId = jdbc.queryForObject(
+        "INSERT INTO posts (title, text, likes_count) " +
+            "VALUES (?, ?, 0)" +
+            "RETURNING id",
+                Long.class,
+                title,
+                text
+        );
+
+        saveTags(postId, tags);
+        return findById(postId).orElseThrow();
+    }
+
+    @Override
+    public Optional<Post> update(Long postId, String title, String text, List<String> tags) {
+        int rows = jdbc.update(
+                "UPDATE posts SET title = ?, text = ?, updated_at = NOW() WHERE id = ?",
+                title,
+                text,
+                postId
+        );
+
+        if (rows == 0) return Optional.empty();
+
+        jdbc.update("DELETE FROM post_tags WHERE post_id = ?", postId);
+        saveTags(postId, tags);
+
+        return findById(postId);
+    }
+
+    @Override
+    public Optional<Post> addLike(Long postId) {
+        int rows = jdbc.update(
+                "UPDATE posts SET likes_count = likes_count + 1, updated_at = NOW() " +
+                    "WHERE id = ?",
+                postId
+        );
+
+        if (rows == 0) {
+            return Optional.empty();
+        }
+
+        return findById(postId);
+    }
+
+    private Long getOrCreateTagId(String tagName) {
+        String normalized = tagName.trim().toLowerCase();
+        if (normalized.isBlank()) return null;
+
+        List<Long> existing = jdbc.query(
+                "SELECT id FROM tags WHERE LOWER(name) = ?",
+                (rs, rowNum) -> rs.getLong("id"),
+                normalized
+        );
+
+        if (!existing.isEmpty())
+            return existing.get(0);
+
+        return jdbc.queryForObject(
+                "INSERT INTO tags (name) VALUES (?) RETURNING id",
+                Long.class,
+                normalized
+        );
+    }
+
+    private void saveTags(long postId, List<String> tags) {
+        List<String> normalizedTags = normalizeTags(tags);
+        for (String tagName : normalizedTags) {
+            Long tagId = getOrCreateTagId(tagName);
+            if (tagId == null) continue;
+
+            jdbc.update(
+                    "INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?) " +
+                            "ON CONFLICT (post_id, tag_id) DO NOTHING",
+                    postId,
+                    tagId
+            );
+        }
     }
 
     private void attachTags(Post... posts) {
@@ -201,5 +280,14 @@ public class PostRepositoryImpl implements PostRepository {
 
         String titleQuery = words.isEmpty() ? null : String.join(" ", words);
         return new SearchCriteria(titleQuery, tags);
+    }
+
+    private List<String> normalizeTags(List<String> tags) {
+        return tags == null ? List.of() :
+                tags.stream()
+                        .filter(t -> t != null && !t.isBlank())
+                        .map(t -> t.trim().toLowerCase())
+                        .distinct()
+                        .toList();
     }
 }

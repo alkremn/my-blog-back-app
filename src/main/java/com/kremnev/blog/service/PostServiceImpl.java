@@ -25,17 +25,22 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Optional<Post> getById(long id) {
-        return postRepository.findById(id);
+    public Optional<Post> getById(long postId) {
+        return postRepository.findById(postId);
     }
 
     @Override
     public Post create(String title, String text, List<String> tags) {
-        return null;
+        return postRepository.create(title, text, tags);
     }
 
     @Override
-    public Post update(Long id, String title, String text, List<String> tags) {
-        return null;
+    public Optional<Post> update(Long postId, String title, String text, List<String> tags) {
+        return postRepository.update(postId, title, text, tags);
+    }
+
+    @Override
+    public Optional<Post> addLike(Long postId) {
+        return postRepository.addLike(postId);
     }
 }
