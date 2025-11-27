@@ -161,6 +161,12 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
+    public boolean delete(Long postId) {
+        int rows = jdbc.update("DELETE FROM posts WHERE id = ?", postId);
+        return rows > 0;
+    }
+
+    @Override
     public Optional<Post> addLike(Long postId) {
         int rows = jdbc.update(
                 "UPDATE posts SET likes_count = likes_count + 1, updated_at = NOW() " +

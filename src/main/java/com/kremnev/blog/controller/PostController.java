@@ -59,13 +59,21 @@ public class PostController {
     }
 
     @PutMapping("{postId}")
-    public ResponseEntity<PostDto> updatePost(@PathVariable long id, @RequestBody UpdatePostRequest request) {
-        var updated = postService.update(id, request.title(), request.text(), request.tags());
-
+    public ResponseEntity<PostDto> updatePost(@PathVariable long postId, @RequestBody UpdatePostRequest request) {
+        var updated = postService.update(postId, request.title(), request.text(), request.tags());
         return updated.map(post -> {
             var location = URI.create("/api/posts/" + post.getId());
             return ResponseEntity.created(location).body(PostDto.from(post));
         }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("{postId}")
+    public ResponseEntity<PostDto> deletePost(@PathVariable long postId) {
+        var isDeleted = postService.delete(postId);
+        if (!isDeleted) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("{postId}/likes")

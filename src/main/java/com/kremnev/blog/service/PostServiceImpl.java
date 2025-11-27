@@ -40,6 +40,11 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public boolean delete(Long postId) {
+        return postRepository.delete(postId);
+    }
+
+    @Override
     public Optional<Post> addLike(Long postId) {
         return postRepository.addLike(postId);
     }

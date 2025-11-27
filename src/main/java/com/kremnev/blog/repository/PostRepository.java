@@ -11,5 +11,6 @@ public interface PostRepository {
     Optional<Post> findById(long postId);
     Post create(String title, String text, List<String> tags);
     Optional<Post> update(Long postId, String title, String text, List<String> tags);
+    boolean delete(Long postId);
     Optional<Post> addLike(Long postId);
 }
