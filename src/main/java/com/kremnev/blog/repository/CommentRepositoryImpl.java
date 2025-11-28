@@ -35,14 +35,14 @@ public class CommentRepositoryImpl implements CommentRepository {
 
     @Override
     public List<Comment> findAllByPostId(Long postId) {
-        return List.of();
+        return jdbc.query("SELECT * FROM comments WHERE post_id = ?", new CommentRowMapper(), postId);
     }
 
     @Override
     public Optional<Comment> findById(Long commentId) {
         try {
             var comment = jdbc.queryForObject(
-                    "SELECT id, post_id, text, created_at, updated_at FROM comments WHERE id = ?",
+                    "SELECT * FROM comments WHERE id = ?",
                     new CommentRowMapper(), commentId);
             if (comment == null)
                 return Optional.empty();
@@ -66,20 +66,29 @@ public class CommentRepositoryImpl implements CommentRepository {
         );
 
         return jdbc.queryForObject(
-                "SELECT id, post_id, text, created_at, updated_at " +
-                        "FROM comments WHERE id = ?",
+                "SELECT * FROM comments WHERE id = ?",
                 new CommentRowMapper(),
                 commentId
         );
     }
 
     @Override
-    public Comment update(Long commentId, Long postId, String text) {
-        return null;
+    public Optional<Comment> update(Long commentId, Long postId, String text) {
+        int rows = jdbc.update(
+            "UPDATE comments SET text = ?, updated_at = NOW() WHERE id = ? AND post_id = ?",
+            text,
+            commentId,
+            postId
+        );
+
+        if (rows == 0) return Optional.empty();
+
+        return findById(commentId);
     }
 
     @Override
-    public boolean delete(Long commentId) {
-        return false;
+    public boolean delete(Long commentId, Long postId) {
+        int rows = jdbc.update("DELETE FROM comments WHERE id = ? AND post_id = ?", commentId, postId);
+        return rows > 0;
     }
 }

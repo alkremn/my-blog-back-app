@@ -9,6 +9,6 @@ public interface CommentService {
     List<Comment> getAllByPostId(Long postId);
     Optional<Comment> getById(Long commentId);
     Comment create(Long postId, String text);
-    Comment update(Long commentId, Long postId, String text);
-    boolean delete(Long commentId);
+    Optional<Comment> update(Long commentId, Long postId, String text);
+    boolean delete(Long commentId, Long postId);
 }

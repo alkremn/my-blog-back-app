@@ -1,9 +1,9 @@
 package com.kremnev.blog.controller;
 
 import com.kremnev.blog.dto.*;
-import com.kremnev.blog.model.Post;
+import com.kremnev.blog.dto.Request.CreatePostRequest;
+import com.kremnev.blog.dto.Request.UpdatePostRequest;
 import com.kremnev.blog.model.PostsResponse;
-import com.kremnev.blog.service.CommentService;
 import com.kremnev.blog.service.PostImageService;
 import com.kremnev.blog.service.PostService;
 import org.springframework.core.io.Resource;
@@ -27,17 +27,15 @@ public class PostController {
 
     private final PostService postService;
     private final PostImageService postImageService;
-    private final CommentService commentService;
 
-    public PostController(PostService postService, PostImageService postImageService, CommentService commentService) {
+    public PostController(PostService postService, PostImageService postImageService) {
         this.postService = postService;
         this.postImageService = postImageService;
-        this.commentService = commentService;
     }
 
     @GetMapping
     @ResponseBody
-    public PostsResponseDto getPosts(@RequestParam(required = false) String search,
+    public PostsResponseDto getAllPosts(@RequestParam(required = false) String search,
                                      @RequestParam(defaultValue = "1") int pageNumber,
                                      @RequestParam(defaultValue = "25") int pageSize)
     {
@@ -47,14 +45,14 @@ public class PostController {
     }
 
     @GetMapping("{postId}")
-    public ResponseEntity<PostDto> getPost(@PathVariable long postId) {
+    public ResponseEntity<PostDto> getPostById(@PathVariable long postId) {
         var postOpt = postService.getById(postId);
         return ResponseEntity.of(postOpt.map(PostDto::from));
     }
 
     @PostMapping
     public ResponseEntity<PostDto> createPost(@RequestBody CreatePostRequest request) {
-        var created = postService.create(request.title(), request.title(), request.tags());
+        var created = postService.create(request.title(), request.text(), request.tags());
         var location = URI.create("/api/posts/" + created.getId());
         return ResponseEntity
                 .created(location)
@@ -71,7 +69,7 @@ public class PostController {
     }
 
     @DeleteMapping("{postId}")
-    public ResponseEntity<PostDto> deletePost(@PathVariable long postId) {
+    public ResponseEntity<Void> deletePost(@PathVariable long postId) {
         var isDeleted = postService.delete(postId);
         if (!isDeleted) {
             return ResponseEntity.notFound().build();
@@ -89,11 +87,14 @@ public class PostController {
     }
 
     @PutMapping("{postId}/image")
-    public ResponseEntity<?> updatePostImage(@PathVariable long postId, @RequestParam("file") MultipartFile file) {
-        System.out.println("Get request with id: " + postId);
+    public ResponseEntity<?> updatePostImage(@PathVariable long postId, @RequestParam("image") MultipartFile image) {
+        if (image == null)
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "File is empty"));
+
         try {
-            postImageService.upsert(postId, file);
-            return ResponseEntity.ok().build();
+            postImageService.upsert(postId, image);
+            return ResponseEntity.noContent().build();
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                     .body(Map.of("message", ex.getMessage()));
@@ -102,7 +103,6 @@ public class PostController {
 
     @GetMapping("{postId}/image")
     public ResponseEntity<Resource> downloadPostImage(@PathVariable long postId) {
-        System.out.println("Get request with id: " + postId);
         try {
             Optional<Resource> file = postImageService.get(postId);
             return file.map(resource -> ResponseEntity.ok()

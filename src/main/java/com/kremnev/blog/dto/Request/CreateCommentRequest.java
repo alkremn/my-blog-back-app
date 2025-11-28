@@ -1,4 +1,4 @@
-package com.kremnev.blog.dto;
+package com.kremnev.blog.dto.Request;
 
 public record CreateCommentRequest(
     Long postId,

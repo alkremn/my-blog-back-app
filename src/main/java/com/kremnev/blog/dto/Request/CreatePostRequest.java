@@ -1,10 +1,10 @@
-package com.kremnev.blog.dto;
+package com.kremnev.blog.dto.Request;
 
 import java.util.List;
 
-public record UpdatePostRequest(
-    Long id,
+public record CreatePostRequest(
     String title,
     String text,
     List<String> tags
 ) {}
+

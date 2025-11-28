@@ -17,7 +17,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<Comment> getAllByPostId(Long postId) {
-        return List.of();
+        return commentRepository.findAllByPostId(postId);
     }
 
     @Override
@@ -31,12 +31,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public Comment update(Long commentId, Long postId, String text) {
-        return null;
+    public Optional<Comment> update(Long commentId, Long postId, String text) {
+        return commentRepository.update(commentId, postId, text);
     }
 
     @Override
-    public boolean delete(Long commentId) {
-        return false;
+    public boolean delete(Long commentId, Long postId) {
+        return commentRepository.delete(commentId, postId);
     }
 }

@@ -28,6 +28,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-core:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
 
     // Spring JDBC for JdbcTemplate
     implementation("org.springframework:spring-jdbc:6.2.14")
@@ -42,6 +43,14 @@ dependencies {
 
     // JUnit Jupiter from your version catalog
     testImplementation(libs.junit.jupiter)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Mockito for mocking dependencies in unit tests
+    testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
+
+    // Spring Test for MockMultipartFile and testing utilities
+    testImplementation("org.springframework:spring-test:6.2.14")
 }
 
 tasks.test {
