@@ -3,6 +3,7 @@ package com.kremnev.blog.controller;
 import com.kremnev.blog.dto.*;
 import com.kremnev.blog.model.Post;
 import com.kremnev.blog.model.PostsResponse;
+import com.kremnev.blog.service.CommentService;
 import com.kremnev.blog.service.PostImageService;
 import com.kremnev.blog.service.PostService;
 import org.springframework.core.io.Resource;
@@ -26,10 +27,12 @@ public class PostController {
 
     private final PostService postService;
     private final PostImageService postImageService;
+    private final CommentService commentService;
 
-    public PostController(PostService postService, PostImageService postImageService) {
+    public PostController(PostService postService, PostImageService postImageService, CommentService commentService) {
         this.postService = postService;
         this.postImageService = postImageService;
+        this.commentService = commentService;
     }
 
     @GetMapping
