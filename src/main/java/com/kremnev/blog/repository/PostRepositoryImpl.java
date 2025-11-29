@@ -5,11 +5,15 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.util.Pair;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,14 +66,14 @@ public class PostRepositoryImpl implements PostRepository {
         List<Object> args = new ArrayList<>();
 
         if (filterByTags) {
-            sql.append("JOIN posts_tags pt ON pt.post_id = p.id ")
+            sql.append("JOIN post_tags pt ON pt.post_id = p.id ")
                     .append("JOIN tags t ON t.id = pt.tag_id ");
         }
 
         List<String> whereParts = new ArrayList<>();
 
         if (filterByTitle) {
-            whereParts.add("p.title ILIKE ?");
+            whereParts.add("LOWER(p.title) LIKE LOWER(?)");
             args.add("%" + sc.titleQuery + "%");
         }
 
@@ -94,7 +98,7 @@ public class PostRepositoryImpl implements PostRepository {
 
         sql.append("ORDER BY p.created_at DESC ");
 
-        int totalCount = getTotalCount(whereParts, args);
+        int totalCount = getTotalCount(whereParts, args, filterByTags, sc.tags.size());
         int offset = Math.max(pageNumber -  1, 0) * pageSize;
         sql.append("LIMIT ? OFFSET ?");
         args.add(pageSize);
@@ -130,15 +134,19 @@ public class PostRepositoryImpl implements PostRepository {
     @Override
     @Transactional
     public Post create(String title, String text, List<String> tags) {
-        Long postId = jdbc.queryForObject(
-        "INSERT INTO posts (title, text, likes_count) " +
-            "VALUES (?, ?, 0)" +
-            "RETURNING id",
-                Long.class,
-                title,
-                text
-        );
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
+        jdbc.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO posts (title, text, likes_count) VALUES (?, ?, 0)",
+                Statement.RETURN_GENERATED_KEYS
+            );
+            ps.setString(1, title);
+            ps.setString(2, text);
+            return ps;
+        }, keyHolder);
+
+        Long postId = ((Number) keyHolder.getKeys().get("id")).longValue();
         saveTags(postId, tags);
         return findById(postId).orElseThrow();
     }
@@ -194,11 +202,17 @@ public class PostRepositoryImpl implements PostRepository {
         if (!existing.isEmpty())
             return existing.get(0);
 
-        return jdbc.queryForObject(
-                "INSERT INTO tags (name) VALUES (?) RETURNING id",
-                Long.class,
-                normalized
-        );
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO tags (name) VALUES (?)",
+                Statement.RETURN_GENERATED_KEYS
+            );
+            ps.setString(1, normalized);
+            return ps;
+        }, keyHolder);
+
+        return ((Number) keyHolder.getKeys().get("id")).longValue();
     }
 
     private void saveTags(long postId, List<String> tags) {
@@ -207,12 +221,21 @@ public class PostRepositoryImpl implements PostRepository {
             Long tagId = getOrCreateTagId(tagName);
             if (tagId == null) continue;
 
-            jdbc.update(
-                    "INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?) " +
-                            "ON CONFLICT (post_id, tag_id) DO NOTHING",
+            // Check if the post-tag relationship already exists
+            Integer count = jdbc.queryForObject(
+                    "SELECT COUNT(*) FROM post_tags WHERE post_id = ? AND tag_id = ?",
+                    Integer.class,
                     postId,
                     tagId
             );
+
+            if (count == null || count == 0) {
+                jdbc.update(
+                        "INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)",
+                        postId,
+                        tagId
+                );
+            }
         }
     }
 
@@ -255,14 +278,47 @@ public class PostRepositoryImpl implements PostRepository {
         });
     }
 
-    private Integer getTotalCount(List<String> whereParts, List<Object> args) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM posts ");
+    private Integer getTotalCount(List<String> whereParts, List<Object> args, boolean filterByTags, int tagCount) {
+        // For simple cases (no tags or single tag), use simple COUNT
+        if (!filterByTags || tagCount <= 1) {
+            StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM posts p");
 
-        if (!whereParts.isEmpty()) {
-            sql.append("WHERE ").append(String.join(" AND ", whereParts));
+            if (filterByTags) {
+                sql.append(" JOIN post_tags pt ON pt.post_id = p.id ")
+                   .append("JOIN tags t ON t.id = pt.tag_id");
+            }
+
+            if (!whereParts.isEmpty()) {
+                sql.append(" WHERE ").append(String.join(" AND ", whereParts));
+            }
+
+            return jdbc.queryForObject(sql.toString(), args.toArray(), Integer.class);
         }
 
-        return jdbc.queryForObject(sql.toString(), args.toArray(), Integer.class);
+        // For multiple tags with AND logic, we need to count distinct posts
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(DISTINCT p.id) FROM posts p " +
+            "JOIN post_tags pt ON pt.post_id = p.id " +
+            "JOIN tags t ON t.id = pt.tag_id"
+        );
+
+        if (!whereParts.isEmpty()) {
+            sql.append(" WHERE ").append(String.join(" AND ", whereParts));
+        }
+
+        sql.append(" GROUP BY p.id HAVING COUNT(DISTINCT LOWER(t.name)) = ?");
+
+        // Create a new args list for the count query that includes the tag count
+        List<Object> countArgs = new ArrayList<>(args);
+        countArgs.add(tagCount);
+
+        // Wrap in outer query to count the grouped results
+        Integer count = jdbc.queryForObject(
+            "SELECT COUNT(*) FROM (" + sql.toString() + ") AS counted_posts",
+            countArgs.toArray(),
+            Integer.class
+        );
+        return count;
     }
 
     private SearchCriteria parseSearch(String raw) {

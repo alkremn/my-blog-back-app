@@ -12,11 +12,11 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 @Service
-public class PostImageServiceImpl implements PostImageService {
+public class BlobServiceImpl implements BlobService {
 
     private final Path root;
 
-    public PostImageServiceImpl(@Value("${uploads.root}") String rootDir) {
+    public BlobServiceImpl(@Value("${uploads.root}") String rootDir) {
         this.root = Path.of(rootDir).toAbsolutePath().normalize();
     }
 

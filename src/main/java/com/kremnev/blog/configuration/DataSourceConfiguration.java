@@ -14,11 +14,12 @@ public class DataSourceConfiguration {
     @Bean
     public DataSource dataSource(
             @Value("${spring.datasource.url}") String url,
+            @Value("${spring.datasource.driver-class-name}") String driverClassName,
             @Value("${spring.datasource.username}") String username,
             @Value("${spring.datasource.password}") String password
     ) {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName("org.postgresql.Driver");
+        dataSource.setDriverClassName(driverClassName);
         dataSource.setUrl(url);
         dataSource.setUsername(username);
         dataSource.setPassword(password);

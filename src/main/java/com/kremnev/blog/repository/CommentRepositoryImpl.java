@@ -4,10 +4,14 @@ import com.kremnev.blog.model.Comment;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,14 +60,19 @@ public class CommentRepositoryImpl implements CommentRepository {
 
     @Override
     public Comment create(Long postId, String text) {
-        Long commentId = jdbc.queryForObject(
-                "INSERT INTO comments (post_id, text) " +
-                        "VALUES (?, ?) " +
-                        "RETURNING id",
-                Long.class,
-                postId,
-                text
-        );
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbc.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO comments (post_id, text) VALUES (?, ?)",
+                Statement.RETURN_GENERATED_KEYS
+            );
+            ps.setLong(1, postId);
+            ps.setString(2, text);
+            return ps;
+        }, keyHolder);
+
+        Long commentId = ((Number) keyHolder.getKeys().get("id")).longValue();
 
         return jdbc.queryForObject(
                 "SELECT * FROM comments WHERE id = ?",

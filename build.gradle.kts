@@ -40,6 +40,7 @@ dependencies {
 
     // Provided by Tomcat / servlet container
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+    testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
 
     // JUnit Jupiter from your version catalog
     testImplementation(libs.junit.jupiter)
@@ -51,6 +52,15 @@ dependencies {
 
     // Spring Test for MockMultipartFile and testing utilities
     testImplementation("org.springframework:spring-test:6.2.14")
+
+    // H2 in-memory database for integration tests
+    testImplementation("com.h2database:h2:2.3.232")
+
+    // Hamcrest matchers for assertions
+    testImplementation("org.hamcrest:hamcrest:2.2")
+
+    // JSON Path for jsonPath() matchers in MockMvc tests
+    testImplementation("com.jayway.jsonpath:json-path:2.9.0")
 }
 
 tasks.test {
