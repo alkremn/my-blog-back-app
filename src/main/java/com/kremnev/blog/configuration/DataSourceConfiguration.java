@@ -1,10 +1,11 @@
 package com.kremnev.blog.configuration;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
 
@@ -18,13 +19,19 @@ public class DataSourceConfiguration {
             @Value("${spring.datasource.username}") String username,
             @Value("${spring.datasource.password}") String password
     ) {
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(driverClassName);
-        dataSource.setUrl(url);
-        dataSource.setUsername(username);
-        dataSource.setPassword(password);
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(url);
+        config.setDriverClassName(driverClassName);
+        config.setUsername(username);
+        config.setPassword(password);
 
-        return dataSource;
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(5);
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
+
+        return new HikariDataSource(config);
     }
 
     @Bean

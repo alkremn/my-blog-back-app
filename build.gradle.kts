@@ -36,6 +36,9 @@ dependencies {
     // PostgreSQL JDBC driver (used at runtime to talk to Docker Postgres)
     runtimeOnly("org.postgresql:postgresql:42.7.3")
 
+    // HikariCP connection pooling
+    implementation("com.zaxxer:HikariCP:5.1.0")
+
     implementation("org.springframework.data:spring-data-commons:3.3.2")
 
     // Provided by Tomcat / servlet container
