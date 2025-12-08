@@ -1,18 +1,18 @@
 package com.kremnev.blog.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kremnev.blog.config.TestConfiguration;
 import com.kremnev.blog.dto.Request.CreatePostRequest;
 import com.kremnev.blog.dto.Request.UpdatePostRequest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -20,7 +20,8 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringJUnitWebConfig(TestConfiguration.class)
+@SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 @DisplayName("PostController Integration Tests")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

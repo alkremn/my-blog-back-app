@@ -6,7 +6,7 @@
 CREATE TABLE if NOT EXISTS posts (
     id          BIGSERIAL PRIMARY KEY,
     title       VARCHAR(256) NOT NULL,
-    text        VARCHAR(256) NOT NULL,
+    text        TEXT NOT NULL,
     likes_count INTEGER      NOT NULL DEFAULT 0,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
@@ -16,7 +16,7 @@ CREATE TABLE if NOT EXISTS posts (
 CREATE TABLE IF NOT EXISTS comments (
     id         BIGSERIAL PRIMARY KEY,
     post_id    BIGINT       NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    text       VARCHAR(256) NOT NULL,
+    text       TEXT NOT NULL,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

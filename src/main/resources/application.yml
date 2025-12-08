@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/blogdb
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+uploads:
+  root: uploads/posts/
