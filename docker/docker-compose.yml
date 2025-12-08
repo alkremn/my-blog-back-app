@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: blog_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: blogdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
+      - ./002_seed-dev.sql:/docker-entrypoint-initdb.d/002_seed-dev.sql
